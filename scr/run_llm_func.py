@@ -307,7 +307,7 @@ def obtain_llm_results(client, df, model, instruction_prompt, user_prompt_beginn
     return pd.DataFrame(results)
 
 
-def run_llm(client, df, model, instruction_prompt, user_prompt_beginning, base_path, pattern, model_series):
+def run_llm(client, df, model, instruction_prompt, user_prompt_beginning, base_path, pattern, model_series, output_subdir: str = 'fearspeech'):
     def get_llm_input(df):
         inputs = df.apply(lambda row: f"""The id is "{row['id']}". Here is the content: {row['text']}""", axis=1)
         return pd.DataFrame(inputs, columns=['input'])
@@ -348,9 +348,9 @@ def run_llm(client, df, model, instruction_prompt, user_prompt_beginning, base_p
     df_llm = df_llm.rename(columns={'category': 'label_llm'})
     df_full = df_full.merge(df_llm, on=['id'], how='left')
 
-    # Save final annotated dataset inside silicon_demo/outputs/fearspeech
-    _os.makedirs(_os.path.join(base_path, 'outputs', 'fearspeech'), exist_ok=True)
-    out_dir = _os.path.join(base_path, 'outputs', 'fearspeech')
+    # Save final annotated dataset inside silicon_demo/outputs/<output_subdir>
+    _os.makedirs(_os.path.join(base_path, 'outputs', output_subdir), exist_ok=True)
+    out_dir = _os.path.join(base_path, 'outputs', output_subdir)
     base_name = f"iteration_{filename_safe}.csv"
     candidate_path = _os.path.join(out_dir, base_name)
 

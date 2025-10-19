@@ -14,7 +14,7 @@ OUTPUT_DIR = os.getenv('OUTPUT_DIR', 'outputs/Combined_Files')
 # SECTION 0: Paths and inputs
 #
 
-DATA_PATH = os.getenv('FEARSPEECH_DATA_PATH', os.path.join(SCRIPT_DIR, 'inputs', 'pnas_2023_fearspeech_sample.csv'))
+DATA_PATH = os.getenv('INPUT_DATA_PATH', os.path.join(SCRIPT_DIR, 'inputs', 'pnas_2023_fearspeech_sample.csv'))
 df_task = pd.read_csv(DATA_PATH).iloc[:10,:]
 pattern_label = r'"id":\s*"([^"]+)"\s*,\s*"label":\s*"([^"]+)"'
 with open(os.path.join(SCRIPT_DIR, 'inputs', 'prompt_fearspeech.json'), 'r', encoding='utf-8') as json_file:
@@ -22,7 +22,7 @@ with open(os.path.join(SCRIPT_DIR, 'inputs', 'prompt_fearspeech.json'), 'r', enc
 
 
 #
-# SECTION 1: LLM inference for fearspeech
+# SECTION 1: LLM inference for task
 #
 
 from openai import OpenAI
@@ -41,38 +41,41 @@ client_gemini = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 client_claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
 
 if not any([client_openai, client_deepseek, client_gemini, client_claude]):
-        print("No API clients configured. Skipping LLM inference (set OPENAI_API_KEY or API_KEYS_JSON_PATH).")
+        print("No API clients configured. Skipping LLM inference (set OPENAI_API_KEY).")
 
+# choose the system prompt and user prompt template for the task
+system_prompt = task_prompts['instruction_prompt']
+user_prompt_beginning = task_prompts['user_prompt_beginning']
 
-# Run LLMs for Fearspeech task
+# Run LLMs for task across multiple models
 if client_openai is not None:
         _ = run_llm(client_openai, df_task, model='gpt-4o',
-                instruction_prompt=task_prompts['instruction_prompt'],
-                user_prompt_beginning=task_prompts['user_prompt_beginning'],
+                instruction_prompt=system_prompt,
+                user_prompt_beginning=user_prompt_beginning,
                 base_path=BASE_PATH,
-                pattern=pattern_label, model_series='gpt')
+                pattern=pattern_label, model_series='gpt', output_subdir='fearspeech')
         _ = run_llm(client_openai, df_task, model='gpt-4.1-2025-04-14',
-                instruction_prompt=task_prompts['instruction_prompt'],
-                user_prompt_beginning=task_prompts['user_prompt_beginning'],
+                instruction_prompt=system_prompt,
+                user_prompt_beginning=user_prompt_beginning,
                 base_path=BASE_PATH,
-                pattern=pattern_label, model_series='gpt')
+                pattern=pattern_label, model_series='gpt', output_subdir='fearspeech')
         _ = run_llm(client_openai, df_task, model='o3-mini',
-                instruction_prompt=task_prompts['instruction_prompt'],
-                user_prompt_beginning=task_prompts['user_prompt_beginning'],
+                instruction_prompt=system_prompt,
+                user_prompt_beginning=user_prompt_beginning,
                 base_path=BASE_PATH,
-                pattern=pattern_label, model_series='gpt')
+                pattern=pattern_label, model_series='gpt', output_subdir='fearspeech')
 if client_claude is not None:
         _ = run_llm(client_claude, df_task, model='claude-3-7-sonnet-20250219',
-                instruction_prompt=task_prompts['instruction_prompt'],
-                user_prompt_beginning=task_prompts['user_prompt_beginning'],
+                instruction_prompt=system_prompt,
+                user_prompt_beginning=user_prompt_beginning,
                 base_path=BASE_PATH,
-                pattern=pattern_label, model_series='claude')
+                pattern=pattern_label, model_series='claude', output_subdir='fearspeech')
 if client_gemini is not None:
         _ = run_llm(client_gemini, df_task, model='gemini-2.5-pro-preview-03-25',
-                instruction_prompt=task_prompts['instruction_prompt'],
-                user_prompt_beginning=task_prompts['user_prompt_beginning'],
+                instruction_prompt=system_prompt,
+                user_prompt_beginning=user_prompt_beginning,
                 base_path=BASE_PATH,
-                pattern=pattern_label, model_series='gemini')
+                pattern=pattern_label, model_series='gemini', output_subdir='fearspeech')
 
 
 #
@@ -92,7 +95,7 @@ _combined_after_merge = os.path.join(BASE_PATH, 'outputs/Combined_Files', 'fears
 if os.path.exists(_combined_after_merge):
         try:
             _dfc = pd.read_csv(_combined_after_merge)
-            print(f"Combined CSV ready: {_combined_after_merge} ({len(_dfc)} rows)")
+            print(f"Combined CSV ready: ({len(_dfc)} rows)")
         except Exception as e:
             print(f"Note: combined CSV exists but could not be read: {e}")
 else:
@@ -103,7 +106,6 @@ else:
 # SECTION 3: Agreement analysis (Kappa) for fearspeech
 #
 from scr.agreement_func import output_llm_gt_kappas
-from scr.datasets_config import fearspeech_dict
 combined_path = os.path.join(BASE_PATH, 'outputs/Combined_Files', 'fearspeech.csv')
 
 is_multi_label_task=True
@@ -151,11 +153,10 @@ if os.path.exists(source_path):
         try:
             df_src = pd.read_csv(source_path)
             if ('majority_label' in df_src.columns) and df_src['majority_label'].notna().any():
-                create_regression_csv(source_path, 'majority_label', fearspeech_dict, output_path)
+                create_regression_csv(source_path, 'majority_label', output_path)
                 # Run regression analysis (binary accuracy) for the generated fearspeech CSV
                 try:
                     script_sh = os.path.join(SCRIPT_DIR, 'scr', 'regression_analysis', 'run_model_comparison.sh')
-                    # Execute via bash to avoid relying on executable bit; run from demo root for relative paths
                     subprocess.run(['bash', script_sh], cwd=SCRIPT_DIR, check=True)
                 except Exception as e:
                     print(f"Warning: Regression analysis script failed: {e}")
@@ -171,7 +172,6 @@ else:
 #
 from scr.threshold_plot import plot_kappa_vs_threshold_fearspeech_with_fsd
 from scr.fsd_sampling import calculate_fsd
-plot_save = os.path.join(SCRIPT_DIR, 'outputs', 'kappa_vs_threshold_fearspeech.png')
 plot_save_fsd = os.path.join(SCRIPT_DIR, 'outputs', 'kappa_vs_threshold_fearspeech_fsd.png')
 combined_exists = os.path.exists(os.path.join(BASE_PATH, 'outputs/Combined_Files', 'fearspeech.csv'))
 if combined_exists:

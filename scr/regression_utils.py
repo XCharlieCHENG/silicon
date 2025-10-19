@@ -5,16 +5,14 @@ import pandas as pd
 def _detect_label_columns(df: pd.DataFrame) -> list:
     """Auto-detect model label columns from the combined file.
 
-    We ignore any numeric-to-display-name mappings and simply use the
-    columns produced by the current merge logic, which suffixes
-    "label_llm" with the iteration token derived from the filename.
-
-    Examples: "label_llmgpt-4o", "label_llmo3-mini", "label_llmgpt-4o_repeat1".
+    Use the columns produced by the current merge logic (suffixing
+    "label_llm" with the iteration token derived from the filename),
+    e.g., "label_llmgpt-4o", "label_llmo3-mini", "label_llmgpt-4o_repeat1".
     """
     return [c for c in df.columns if c.startswith('label_llm') and c != 'label_llm']
 
 
-def create_regression_csv(source_file, gt_col, model_dict, output_path):
+def create_regression_csv(source_file, gt_col,output_path):
     """Create regression CSV with binary accuracy indicators using detected model columns.
 
     - 1 if model prediction matches ground truth exactly, else 0.
@@ -22,9 +20,6 @@ def create_regression_csv(source_file, gt_col, model_dict, output_path):
       "label_llm" (excluding the bare "label_llm").
     - The output columns are named after the detected model suffixes (e.g.,
       "gpt-4o", "o3-mini", "gpt-4o_repeat1"), plus an 'id' column.
-
-    Note: model_dict and TARGET_MODELS are intentionally ignored to avoid any
-    numeric-to-display-name mapping. We rely solely on present columns.
     """
     df = pd.read_csv(source_file)
 
@@ -58,7 +53,7 @@ def create_regression_csv(source_file, gt_col, model_dict, output_path):
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     df_final.to_csv(output_path, index=False)
-    print(f"Created {output_path} with {len(df_final)} rows")
+    print(f"Created regression CSV: ({len(df_final)} rows).")
     return df_final
 
 

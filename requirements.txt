@@ -1,0 +1,13 @@
+openai==2.5.0
+anthropic==0.71.0
+google-genai==1.45.0
+pandas==2.3.3
+numpy==2.3.4
+matplotlib==3.10.7
+seaborn==0.13.2
+scikit-learn==1.7.2
+krippendorff==0.8.1
+tiktoken==0.12.0
+tqdm==4.67.1
+scipy==1.16.2
+ipdb==0.13.13

@@ -1,0 +1,11 @@
+text,logprobs,sum_logprobs,token_completion,token_prompt
+"{""id"": ""102580904491418892_gab"", ""label"": ""hatespeech"", ""target"": ""white women""}",,,361,972
+"{""id"": ""3948117306636774_gab"", ""label"": ""hatespeech"", ""target"": ""Muslims""}",,,1258,972
+"{""id"": ""7196216423644140_gab"", ""label"": ""fearspeech, hatespeech"", ""target"": ""blacks""}",,,364,1007
+"{""id"": ""8338049732534514_gab"", ""label"": ""normal"", ""target"": ""other""}",,,230,947
+"{""id"": ""3610797605421789_gab"", ""label"": ""hatespeech"", ""target"": ""Muslims""}",,,553,963
+"{""id"": ""10955875460440675_gab"", ""label"": ""hatespeech"", ""target"": ""jews""}",,,745,1090
+"{""id"": ""9703216047227170_gab"", ""label"": ""fearspeech, hatespeech"", ""target"": ""illegal immigrants""}",,,684,992
+"{""id"": ""10522539055944256_gab"", ""label"": ""hatespeech"", ""target"": ""black""}",,,232,970
+"{""id"": ""8877453039625834_gab"", ""label"": ""normal"", ""target"": ""women""}",,,1126,993
+"{""id"": ""9170457342071017_gab"", ""label"": ""hatespeech"", ""target"": ""asylum seekers""}",,,746,1011

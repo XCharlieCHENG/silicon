@@ -19,8 +19,4 @@ export ANTHROPIC_API_KEY=...   # Claude
 
 ### Run
 From inside the `silicon_demo` folder:
-```bash
-python run_llm.py
-```
-
-Alternatively, you can run the script using `run_llm.ipynb`.
+You can run the script using `run_llm.ipynb`.
